@@ -130,7 +130,7 @@ async def amireallyalive(alive):
                      f"Python version🐍:127.0.0.1\n"
                      f"------------------------------------ \n"
                      
-                     f"User 👨‍🚀:Ritaa \n"
+                     f"User 👨‍🚀:Ritaa Castell \n"
                      f"Maintainer 🏄‍♂️: @Literally_Dead \n"
                      f"Admin 👑: @Literally_Dead \n"
                      f"Userbot 😏: RitaaUB \n"
