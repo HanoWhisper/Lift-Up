@@ -134,7 +134,7 @@ async def amireallyalive(alive):
                      f"Maintainer 🏄‍♂️: @heyworld \n"
                      f"Admin 👑: @Literally_Dead \n"
                      f"Userbot 😏: just a bot \n"
-                     f"Repo 📥:https://github.com/EnjoyAlexa/Lift-Up"
+                     f"Repo 📥:https://github.com/EnjoyAlexa/Lift-Up.git"
                      )    
 
 
