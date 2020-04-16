@@ -38,11 +38,7 @@ async def magisk(request):
                     f'[Uninstaller]({data["uninstaller"]["link"]})\n'
     await request.edit(releases)
 
-
-
-
 CMD_HELP.update({
     "android":
     ".magisk\
-\nGet latest Magisk releases\
-})
+\nGet latest Magisk releases\})
