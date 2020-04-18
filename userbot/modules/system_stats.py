@@ -126,15 +126,15 @@ async def amireallyalive(alive):
                      
                       
                      f"`🤖 STATUS: Working Sexy AF ✅` \n"
-                     f"Telethon version:69.69.69 \n"
-                     f"Python version🐍:127.0.0.1\n"
+                     f"Telethon version:{version.__version__} \n"
+                     f"Python version🐍:{python_version()} \n"
                      f"------------------------------------ \n"
                      
-                     f"User 👨‍🚀:Enjoy It \n"
+                     f"User 👨‍🚀:{DEFAULTUSER} \n"
                      f"Maintainer 🏄‍♂️: @heyworld \n"
-                     f"Admin 👑: @Literally_Dead \n"
-                     f"Userbot 😏: just a bot \n"
-                     f"Repo 📥:https://github.com/EnjoyAlexa/Lift-Up.git"
+                     f"Admin 👑:{DEFAULTUSER} \n"
+                     f"Userbot 😏: OpenUserBot \n"
+                     f"Repo 📥:https://github.com/sahyam2019/OpenUserBot"
                      )    
 
 
