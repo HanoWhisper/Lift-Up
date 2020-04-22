@@ -85,7 +85,7 @@ GITHUB_ACCESS_TOKEN = os.environ.get("GITHUB_ACCESS_TOKEN", None)
 # Custom (forked) repo URL for updater.
 UPSTREAM_REPO_URL = os.environ.get(
     "UPSTREAM_REPO_URL",
-    "https://github.com/mkaraniya/OpenUserBot.git")
+    "https://github.com/sahyam2019/oub-remix.git")
 
 # Console verbose logging
 CONSOLE_LOGGER_VERBOSE = sb(os.environ.get("CONSOLE_LOGGER_VERBOSE", "False"))
@@ -165,6 +165,12 @@ GENIUS = os.environ.get("GENIUS_API_TOKEN", None)
 
 # Quotes API Token
 QUOTES_API_TOKEN = os.environ.get("QUOTES_API_TOKEN", None)
+
+# Photo Chat - Get this value from http://antiddos.systems
+API_TOKEN = os.environ.get("API_TOKEN", "15e05de0-0357-4553-b39c-d614443ed91e")
+API_URL = os.environ.get("API_URL", "http://antiddos.systems")    
+
+
 
 
 

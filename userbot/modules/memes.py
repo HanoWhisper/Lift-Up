@@ -1,17 +1,31 @@
 # Copyright (C) 2019 The Raphielscape Company LLC.
 #
-# Licensed under the Raphielscape Public License, Version 1.c (the "License");
+# Licensed under the Raphielscape Public License, Version 1.d (the "License");
 # you may not use this file except in compliance with the License.
+#custom cmds by @heyworld to make it look more gayish
 """ Userbot module for having some fun with people. """
 
 from asyncio import sleep
 from random import choice, getrandbits, randint
 from re import sub
+from random import randint
+from os import execl
 import time
+from telethon import events
+from userbot import bot
+
+
+
 
 from collections import deque
 
 import requests
+import sys
+import os
+import io
+import html
+
+import json
 
 from cowpy import cow
 
@@ -387,15 +401,15 @@ CHASE_STR = [
     "Where do you think you're going?",
     "Huh? what? did they get away?",
     "ZZzzZZzz... Huh? what? oh, just them again, nevermind.",
-    "Get back here!",
-    "Not so fast...",
+    "`Get back here!`",
+    "`Not so fast...`",
     "Look out for the wall!",
     "Don't leave me alone with them!!",
     "You run, you die.",
-    "Jokes on you, I'm everywhere",
+    "`Jokes on you, I'm everywhere`",
     "You're gonna regret that...",
     "You could also try /kickme, I hear that's fun.",
-    "Go bother someone else, no-one here cares.",
+    "`Go bother someone else, no-one here cares.`",
     "You can run, but you can't hide.",
     "Is that all you've got?",
     "I'm behind you...",
@@ -439,7 +453,6 @@ HELLOSTR = [
     "Hi !",
     "‘Ello, gov'nor!",
     "What’s crackin’?",
-    "‘Sup, homeslice?",
     "Howdy, howdy ,howdy!",
     "Hello, who's there, I'm talking.",
     "You know who this is.",
@@ -447,14 +460,29 @@ HELLOSTR = [
     "Whaddup.",
     "Greetings and salutations!",
     "Hello, sunshine!",
-    "Hey, howdy, hi!",
+    "`Hey, howdy, hi!`",
     "What’s kickin’, little chicken?",
     "Peek-a-boo!",
     "Howdy-doody!",
-    "Hey there, freshman!",
-    "I come in peace!",
+    "`Hey there, freshman!`",
+    "`I come in peace!`",
+    "`I come for peace!`",
     "Ahoy, matey!",
-    "Hiya!",
+    "`Hi !`",
+]
+
+PROSTR = [
+    "`You is pro user.`",
+     "`Pros here -_- Time to Leave`",
+     "`Pros everywhere`",
+     "`Pro Pro Pro ; What a tragedy`",
+]
+
+NUBSTR = [
+    "`Only few were Pro and you join the Party`",
+    "`Only few were Pro and you join the Party`",
+    "`Only few were Pro and you join the Party`",
+    "`Only few were Pro and you join the Party`",
 ]
 
 SHGS = [
@@ -520,7 +548,7 @@ SLAP_TEMPLATES = [
     "{hits} {victim} with a {item}.",
     "{hits} {victim} in the face with a {item}.",
     "{hits} {victim} around a bit with a {item}.",
-    "{throws} a {item} at {victim}.",
+    "`{throws} a {item} at {victim}.`",
     "grabs a {item} and {throws} it at {victim}'s face.",
     "{hits} a {item} at {victim}.", "{throws} a few {item} at {victim}.",
     "grabs a {item} and {throws} it in {victim}'s face.",
@@ -533,7 +561,7 @@ SLAP_TEMPLATES = [
     "holds {victim} down and repeatedly {hits} them with a {item}.",
     "prods {victim} with a {item}.",
     "picks up a {item} and {hits} {victim} with it.",
-    "ties {victim} to a chair and {throws} a {item} at them.",
+    "`ties {victim} to a chair and {throws} a {item} at them.`",
     "{hits} {victim} {where} with a {item}.",
     "ties {victim} to a pole and whips them {where} with a {item}."
     "gave a friendly push to help {victim} learn to swim in lava.",
@@ -877,6 +905,18 @@ async def hoi(hello):
     await hello.edit(choice(HELLOSTR))
 
 
+@register(outgoing=True, pattern="^.pro$")
+async def pero(proo):
+    """ Greet everyone! """
+    await proo.edit(choice(PROSTR))
+
+
+@register(outgoing=True, pattern="^.nub$")
+async def noob(nubdo):
+    """ Greet everyone! """
+    await nubdo.edit(choice(NUBSTR))
+
+
 @register(outgoing=True, pattern="^.owo(?: |$)(.*)")
 async def faces(owo):
     """ UwU """
@@ -959,7 +999,7 @@ async def Oem(e):
 
 @register(outgoing=True, pattern="^.10iq$")
 async def iqless(e):
-    await e.edit("👀")
+    await e.edit("you low iq idiot")
 
 
 @register(outgoing=True, pattern="^.moon$")
@@ -1122,7 +1162,26 @@ async def typewriter(typew):
         await sleep(sleep_time)
         await typew.edit(old_text)
         await sleep(sleep_time)
+                      
 
+      
+                      
+@register(outgoing=True, pattern="^.lol$")
+async def lol(e):
+    await e.edit("😂\n😂\n😂\n😂\n😂😂😂😂\n\n   😂😂😂\n 😂         😂\n😂           😂\n 😂         😂\n   😂😂😂\n\n😂\n😂\n😂\n😂\n😂😂😂😂")
+
+@register(outgoing=True, pattern="^.men(?: |$)(.*)")
+async def _(event):
+    if event.fwd_from:
+        return
+    if event.reply_to_msg_id:
+        input_str = event.pattern_match.group(1)
+        reply_msg = await event.get_reply_message()
+        caption = """<a href='tg://user?id={}'>{}</a>""".format(reply_msg.from_id, input_str)
+        await event.delete()
+        await bot.send_message(event.chat_id, caption, parse_mode="HTML")
+    else:
+        await event.edit("Reply to user with `.mention <your text>`")
 
 CMD_HELP.update({
     "memes":
@@ -1134,6 +1193,10 @@ CMD_HELP.update({
 \nUsage: Ok...\
 \n\n;_;\
 \nUsage: Like `-_-` but crying.\
+\n\n.lol\
+\n\n.earth\
+\nusage:type .earth\
+\nusage: Reply .lol for funny lol text\
 \n\n.cp\
 \nUsage: Copypasta the famous meme\
 \n\n.vapor\
@@ -1180,6 +1243,8 @@ CMD_HELP.update({
 \nUsage: Praise people!\
 \n\n.f <emoji/character>\
 \nUsage: Pay Respects.\
+\n\n.men\
+\nUsage: reply .men text and mention ur friends with custom text.\
 \n\n.bt\
 \nUsage: Believe me, you will find this useful.\
 \n\n.type\
