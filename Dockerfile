@@ -62,6 +62,7 @@ RUN apk add freetype-dev --no-cache=true --update \
 
 RUN curl https://cli-assets.heroku.com/install.sh
 
+
 RUN python3 -m ensurepip \
     && pip3 install --upgrade pip setuptools \
     && pip3 install wheel \
@@ -78,6 +79,8 @@ RUN python3 -m ensurepip \
 #
 RUN git clone -b sql-extended https://github.com/sahyam2019/oub-remix /root/userbot
 RUN mkdir /root/userbot/.bin
+WORKDIR /root/userbot/
+ENV PATH="/root/userbot/.bin:$PATH"
 WORKDIR /root/userbot/
 
 #

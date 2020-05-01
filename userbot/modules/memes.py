@@ -483,6 +483,7 @@ NUBSTR = [
     "`Hi Nub what'sup`",
     "`Only i and you know that ur a noob and trying to act like pro`",
     "`Sorry we don't appoint noobs`",
+    "`Bot rule 420 section 69 prevents me from replying to stupid nubfuks like you.`",
 ]
 
 BYESTR = [
@@ -1101,7 +1102,7 @@ async def payf(event):
     await event.edit(pay)
 
 
-@register(outgoing=True, pattern="^.lfy (.*)")
+@register(outgoing=True, pattern="^.gi (.*)")
 async def let_me_google_that_for_you(lmgtfy_q):
     textx = await lmgtfy_q.get_reply_message()
     qry = lmgtfy_q.pattern_match.group(1)
@@ -1265,7 +1266,7 @@ CMD_HELP.update({
 \nUsage: Believe me, you will find this useful.\
 \n\n.type\
 \nUsage: Just a small command to make your keyboard become a typewriter!\
-\n\n.lfy <query>\
+\n\n.gi <query>\
 \nUsage: Let me Google that for you real quick !!\
 \n\n.decide [Alternates: (.yes, .no, .maybe)]\
 \nUsage: Make a quick decision.\
