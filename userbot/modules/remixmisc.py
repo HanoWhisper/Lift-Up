@@ -4,11 +4,16 @@ import requests
 import bs4 
 import re
 import os
+import math
 import asyncio
 import zipfile
 import time
 import html
+import patoolib
+import shutil
+import subprocess
 from io import BytesIO
+from justwatch import JustWatch
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from telethon import *
 from userbot.events import register 
@@ -18,6 +23,7 @@ from telethon import events
 from telethon.tl import functions, types
 from urllib.parse import quote
 from datetime import datetime, timedelta
+from telethon.tl.types import DocumentAttributeVideo
 from telethon.tl.types import UserStatusEmpty, UserStatusLastMonth, UserStatusLastWeek, UserStatusOffline, UserStatusOnline, UserStatusRecently, ChannelParticipantsKicked, ChatBannedRights
 from time import sleep
 from telethon.tl.functions.photos import GetUserPhotosRequest
@@ -26,7 +32,7 @@ from telethon.tl.types import MessageEntityMentionName
 from telethon.utils import get_input_location
 from telethon.tl.types import DocumentAttributeAudio, DocumentAttributeVideo
 from telethon.tl.types import DocumentAttributeFilename
-from userbot.modules.upload_download import progress, humanbytes, time_formatter
+from userbot.utils import progress, humanbytes, time_formatter
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 from telethon.errors import PhotoInvalidDimensionsError
@@ -38,9 +44,16 @@ from telethon.tl.functions.messages import SendMediaRequest
 
 import logging
 
+normiefont = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
+              'v', 'w', 'x', 'y', 'z']
+weebyfont = ['卂', '乃', '匚', '刀', '乇', '下', '厶', '卄', '工', '丁', '长', '乚', '从', '𠘨', '口', '尸', '㔿', '尺', '丂', '丅', '凵',
+             'リ', '山', '乂', '丫', '乙']
+
+
 
 logger = logging.getLogger(__name__)
 
+thumb_image_path = TEMP_DOWNLOAD_DIRECTORY + "/thumb_image.jpg"
 
 
 if 1 == 1:
@@ -319,6 +332,52 @@ async def ban_user(chat_id, i, rights):
         return True, None
     except Exception as exc:
         return False, str(exc)
+    
+    
+@register(outgoing=True, pattern="^.rnupload(?: |$)(.*)")
+async def _(event):
+    if event.fwd_from:
+        return
+    thumb = None
+    if os.path.exists(thumb_image_path):
+        thumb = thumb_image_path
+    await event.edit("`Rename & Upload in process 🙄🙇‍♂️🙇‍♂️🙇‍♀️ It might take some time if file size is big`")
+    input_str = event.pattern_match.group(1)
+    if not os.path.isdir(TEMP_DOWNLOAD_DIRECTORY):
+        os.makedirs(TEMP_DOWNLOAD_DIRECTORY)
+    if event.reply_to_msg_id:
+        start = datetime.now()
+        end = datetime.now()
+        file_name = input_str
+        reply_message = await event.get_reply_message()
+        to_download_directory = TEMP_DOWNLOAD_DIRECTORY
+        downloaded_file_name = os.path.join(to_download_directory, file_name)
+        downloaded_file_name = await bot.download_media(
+            reply_message,
+            downloaded_file_name,
+            )
+        ms_one = (end - start).seconds
+        if os.path.exists(downloaded_file_name):
+            c_time = time.time()
+            await bot.send_file(
+                event.chat_id,
+                downloaded_file_name,
+                force_document=True,
+                supports_streaming=False,
+                allow_cache=False,
+                reply_to=event.message.id,
+                thumb=thumb,
+                )
+            end_two = datetime.now()
+            os.remove(downloaded_file_name)
+            ms_two = (end_two - end).seconds
+            await event.edit("Downloaded in {} seconds. Uploaded in {} seconds.".format(ms_one, ms_two))
+        else:
+            await event.edit("File Not Found {}".format(input_str))
+    else:
+        await event.edit("Syntax // .rnupload filename.extension as reply to a Telegram media")
+
+    
        
 @register(outgoing=True, pattern="^.grab(?: |$)(.*)")
 async def potocmd(event):
@@ -351,125 +410,6 @@ async def potocmd(event):
             else:
                 await event.edit("`No photo found of that Nigga , now u Die`")
                 return
-@register(outgoing=True, pattern="^.watermark(?: |$)(.*)")
-async def _(event):
-    if event.fwd_from:
-        return
-    bot = await event.edit("Processing ...")
-    if not os.path.isdir(TEMP_DOWNLOAD_DIRECTORY):
-        os.makedirs(TEMP_DOWNLOAD_DIRECTORY)
-    if not os.path.isdir("./downloads/"):
-        os.makedirs("./downloads/")
-    if event.reply_to_msg_id:
-        start = datetime.now()
-        reply_message = await event.get_reply_message()
-        try:
-            c_time = time.time()
-            downloaded_file_name = await bot.download_media(
-                reply_message,
-                TEMP_DOWNLOAD_DIRECTORY,
-                progress_callback=lambda d, t: asyncio.get_event_loop().create_task(
-                    progress(d, t, bot, c_time, "trying to download")
-                )
-            )
-        except Exception as e:  # pylint:disable=C0103,W0703
-            await bot.edit(str(e))
-        else:
-            end = datetime.now()
-            ms = (end - start).seconds
-            await bot.edit("Stored the pdf to `{}` in {} seconds.".format(downloaded_file_name, ms))
-            watermark(
-                inputpdf=downloaded_file_name,
-                outputpdf='./downloads/' + reply_message.file.name,
-                watermarkpdf='./bin/watermark.pdf'
-            )
-        # filename = sorted(get_lst_of_files('./downloads/' + reply_message.file.name, []))
-        #filename = filename + "/"
-        await event.edit("Uploading now")
-        caption_rts = os.path.basename(watermark_path + reply_message.file.name)
-        await bot.send_file(
-            event.chat_id,
-            watermark_path + reply_message.file.name,
-            reply_to=event.message.id,
-            progress_callback=lambda d, t: asyncio.get_event_loop().create_task(
-                progress(d, t, event, c_time, "trying to upload")
-            )
-        )
-        # r=root, d=directories, f = files
-        # for single_file in filename:
-        #     if os.path.exists(single_file):
-        #         # https://stackoverflow.com/a/678242/4723940
-        #         caption_rts = os.path.basename(single_file)
-        #         force_document = False
-        #         supports_streaming = True
-        #         document_attributes = []
-        #         if single_file.endswith((".mp4", ".mp3", ".flac", ".webm")):
-        #             metadata = extractMetadata(createParser(single_file))
-        #             duration = 0
-        #             width = 0
-        #             height = 0
-        #             if metadata.has("duration"):
-        #                 duration = metadata.get('duration').seconds
-        #             if os.path.exists(thumb_image_path):
-        #                 metadata = extractMetadata(createParser(thumb_image_path))
-        #                 if metadata.has("width"):
-        #                     width = metadata.get("width")
-        #                 if metadata.has("height"):
-        #                     height = metadata.get("height")
-        #             document_attributes = [
-        #                 DocumentAttributeVideo(
-        #                     duration=duration,
-        #                     w=width,
-        #                     h=height,
-        #                     round_message=False,
-        #                     supports_streaming=True
-        #                 )
-        #             ]
-        #         try:
-        #             await bot.send_file(
-        #                 event.chat_id,
-        #                 single_file,
-        #                 caption=f"`{caption_rts}`",
-        #                 force_document=force_document,
-        #                 supports_streaming=supports_streaming,
-        #                 allow_cache=False,
-        #                 reply_to=event.message.id,
-        #                 attributes=document_attributes,
-        #                 # progress_callback=lambda d, t: asyncio.get_event_loop().create_task(
-        #                 #     progress(d, t, event, c_time, "trying to upload")
-        #                 # )
-        #             )
-        #         except Exception as e:
-        #             await bot.send_message(
-        #                 event.chat_id,
-        #                 "{} caused `{}`".format(caption_rts, str(e)),
-        #                 reply_to=event.message.id
-        #             )
-        #             # some media were having some issues
-        #             continue
-        #         os.remove(single_file)
-        # os.remove(downloaded_file_name)
-
-def watermark(inputpdf, outputpdf, watermarkpdf):
-    watermark = PdfFileReader(watermarkpdf)
-    watermarkpage = watermark.getPage(0)
-    pdf = PdfFileReader(inputpdf)
-    pdfwrite = PdfFileWriter()
-    for page in range(pdf.getNumPages()):
-        pdfpage = pdf.getPage(page)
-        pdfpage.mergePage(watermarkpage)
-        pdfwrite.addPage(pdfpage)
-    with open(outputpdf, 'wb') as fh:
-        pdfwrite.write(fh)
-
-def get_lst_of_files(input_directory, output_lst):
-    filesinfolder = os.listdir(input_directory)
-    for file_name in filesinfolder:
-        current_file_name = os.path.join(input_directory, file_name)
-        if os.path.isdir(current_file_name):
-            return get_lst_of_files(current_file_name, output_lst)
-        output_lst.append(current_file_name)
-    return output_lst
 
 
 @register(outgoing=True, pattern="^.res(?: |$)(.*)")
@@ -547,7 +487,7 @@ async def _(event):
     #message_id_to_reply = event.message.reply_to_msg_id
     #if not message_id_to_reply:
     #    message_id_to_reply = event.message.id
-    #await borg.send_message(
+    #await bot.send_message(
     #  event.chat_id,
     #  "Hey ? Whats Up !",
     #  reply_to=message_id_to_reply,
@@ -613,26 +553,280 @@ async def get_full_user(event):
             except Exception as e:
                 return None, e
             
+
+def get_stream_data(query):
+    stream_data = {}
+
+    # Compatibility for Current Userge Users
+    try:
+        country = Config.WATCH_COUNTRY
+    except Exception:
+        country = "IN"
+
+    # Cooking Data
+    just_watch = JustWatch(country = country)
+    results = just_watch.search_for_item(query = query)
+    movie = results['items'][0]
+    stream_data['title'] = movie['title']
+    stream_data['movie_thumb'] = "https://images.justwatch.com"+movie['poster'].replace("{profile}","")+"s592"
+    stream_data['release_year'] = movie['original_release_year']
+    try:
+        print(movie['cinema_release_date'])
+        stream_data['release_date'] = movie['cinema_release_date']
+    except KeyError:
+        try:
+            stream_data['release_date'] = movie['localized_release_date']
+        except KeyError:
+            stream_data['release_date'] = None
+
+    stream_data['type'] = movie['object_type']
+
+    available_streams = {}
+    for provider in movie['offers']:
+        provider_ = get_provider(provider['urls']['standard_web'])
+        available_streams[provider_] = provider['urls']['standard_web']
+    
+    stream_data['providers'] = available_streams
+
+    scoring = {}
+    for scorer in movie['scoring']:
+        if scorer['provider_type']=="tmdb:score":
+            scoring['tmdb'] = scorer['value']
+
+        if scorer['provider_type']=="imdb:score":
+            scoring['imdb'] = scorer['value']
+    stream_data['score'] = scoring
+    return stream_data
+
+#Helper Functions
+def pretty(name):
+    if name=="play":
+        name = "Google Play Movies" 
+    return name[0].upper()+name[1:]
+
+def get_provider(url):
+    url = url.replace("https://www.","")
+    url = url.replace("https://","")
+    url = url.replace("http://www.","")
+    url = url.replace("http://","")
+    url = url.split(".")[0]
+    return url
+
+@register(outgoing=True, pattern="^.watch(?: |$)(.*)")
+async def _(event):
+    if event.fwd_from:
+        return
+    query = event.pattern_match.group(1)
+    await event.edit("Finding Sites...")
+    streams = get_stream_data(query)
+    title = streams['title']
+    thumb_link = streams['movie_thumb']
+    release_year = streams['release_year']
+    release_date = streams['release_date']
+    scores = streams['score']
+    try:
+        imdb_score = scores['imdb']
+    except KeyError:
+        imdb_score = None
+    
+    try:
+        tmdb_score = scores['tmdb']
+    except KeyError:
+        tmdb_score = None
+        
+    stream_providers = streams['providers']
+    if release_date is None:
+        release_date = release_year
+
+    output_ = f"**Movie:**\n`{title}`\n**Release Date:**\n`{release_date}`"
+    if imdb_score:
+        output_ = output_ + f"\n**IMDB: **{imdb_score}"
+    if tmdb_score:
+        output_ = output_ + f"\n**TMDB: **{tmdb_score}"
+
+    output_ = output_ + "\n\n**Available on:**\n"
+    for provider,link in stream_providers.items():
+        if 'sonyliv' in link:
+            link = link.replace(" ","%20")
+        output_ += f"[{pretty(provider)}]({link})\n"
+    
+    await bot.send_file(event.chat_id, caption=output_, file=thumb_link,force_document=False,allow_cache=False, silent=True)
+    await event.delete()
+
+#credits:
+#Ported from Saitama Bot. 
+#By :- @PhycoNinja13b
+#Modified by :- @kirito6969,@deleteduser420
+@register(outgoing=True, pattern="^.weeb(?: |$)(.*)")
+async def weebify(event):
+
+    args = event.pattern_match.group(1)
+    if not args:
+        get = await event.get_reply_message()
+        args = get.text   
+    if not args:
+        await event.edit("`What I am Supposed to Weebify U Dumb`")
+        return
+    string = ' '.join(args).lower()
+    for normiecharacter in string:
+        if normiecharacter in normiefont:
+            weebycharacter = weebyfont[normiefont.index(normiecharacter)]
+            string = string.replace(normiecharacter, weebycharacter)
+    await event.edit(string)
+   
+
+boldfont = ['𝗮', '𝗯', '𝗰', '𝗱', '𝗲', '𝗳', '𝗴', '𝗵', '𝗶', '𝗷', '𝗸', '𝗹', '𝗺', '𝗻', '𝗼', '𝗽', '𝗾', '𝗿', '𝘀', '𝘁', '𝘂',
+              '𝘃', '𝘄', '𝘅', '𝘆', '𝘇']
+   
+@register(outgoing=True, pattern="^.bold(?: |$)(.*)")
+async def thicc(bolded):
+
+    args = bolded.pattern_match.group(1)
+    if not args:
+        get = await bolded.get_reply_message()
+        args = get.text   
+    if not args:
+        await bolded.edit("`What I am Supposed to bold for U Dumb`")
+        return
+    string = ''.join(args).lower()
+    for normiecharacter in string:
+        if normiecharacter in normiefont:
+            boldcharacter = boldfont[normiefont.index(normiecharacter)]
+            string = string.replace(normiecharacter, boldcharacter)
+    await bolded.edit(string)
+    
+    
+medievalbold = ['𝖆', '𝖇', '𝖈', '𝖉', '𝖊', '𝖋', '𝖌', '𝖍', '𝖎', '𝖏', '𝖐', '𝖑', '𝖒', '𝖓', '𝖔', '𝖕', '𝖖', '𝖗', '𝖘', '𝖙', '𝖚',
+                '𝖛', '𝖜', '𝖝', '𝖞', '𝖟']
+   
+@register(outgoing=True, pattern="^.medibold(?: |$)(.*)")
+async def mediv(medievalx):
+
+    args = medievalx.pattern_match.group(1)
+    if not args:
+        get = await medievalx.get_reply_message()
+        args = get.text   
+    if not args:
+        await medievalx.edit("`What I am Supposed to medieval bold for U Dumb`")
+        return
+    string = ''.join(args).lower()
+    for normiecharacter in string:
+        if normiecharacter in normiefont:
+            medievalcharacter = medievalbold[normiefont.index(normiecharacter)]
+            string = string.replace(normiecharacter, medievalcharacter)
+    await medievalx.edit(string)
+    
+    
+doublestruckt = ['𝕒', '𝕓', '𝕔', '𝕕', '𝕖', '𝕗', '𝕘', '𝕙', '𝕚', '𝕛', '𝕜', '𝕝', '𝕞', '𝕟', '𝕠', '𝕡', '𝕢', '𝕣', '𝕤', '𝕥', '𝕦',
+                '𝕧', '𝕨', '𝕩', '𝕪', '𝕫']
+   
+@register(outgoing=True, pattern="^.doublestruck(?: |$)(.*)")
+async def doublex(doublestrucktx):
+
+    args = doublestrucktx.pattern_match.group(1)
+    if not args:
+        get = await doublestrucktx.get_reply_message()
+        args = get.text   
+    if not args:
+        await doublestrucktx.edit("`What I am Supposed to double struck for U Dumb`")
+        return
+    string = ''.join(args).lower()
+    for normiecharacter in string:
+        if normiecharacter in normiefont:
+            strucktcharacter = doublestruckt[normiefont.index(normiecharacter)]
+            string = string.replace(normiecharacter, strucktcharacter)
+    await doublestrucktx.edit(string)
+    
+    
+cursiveboldx = ['𝓪', '𝓫', '𝓬', '𝓭', '𝓮', '𝓯', '𝓰', '𝓱', '𝓲', '𝓳', '𝓴', '𝓵', '𝓶', '𝓷', '𝓸', '𝓹', '𝓺', '𝓻', '𝓼', '𝓽', '𝓾',
+                '𝓿', '𝔀', '𝔁', '𝔂', '𝔃']  
+   
+@register(outgoing=True, pattern="^.curbold(?: |$)(.*)")
+async def cursive2(cursivebolded):
+
+    args = cursivebolded.pattern_match.group(1)
+    if not args:
+        get = await cursivebolded.get_reply_message()
+        args = get.text   
+    if not args:
+        await cursivebolded.edit("`What I am Supposed to cursive bold for U Dumb`")
+        return
+    string = ''.join(args).lower()
+    for normiecharacter in string:
+        if normiecharacter in normiefont:
+            cursiveboldcharacter = cursiveboldx[normiefont.index(normiecharacter)]
+            string = string.replace(normiecharacter, cursiveboldcharacter)
+    await cursivebolded.edit(string)
+    
+    
+medival2 = ['𝔞', '𝔟', '𝔠', '𝔡', '𝔢', '𝔣', '𝔤', '𝔥', '𝔦', '𝔧', '𝔨', '𝔩', '𝔪', '𝔫', '𝔬', '𝔭', '𝔮', '𝔯', '𝔰', '𝔱', '𝔲',
+            '𝔳', '𝔴', '𝔵', '𝔶', '𝔷']
+   
+@register(outgoing=True, pattern="^.medi(?: |$)(.*)")
+async def medival22(medivallite):
+
+    args = medivallite.pattern_match.group(1)
+    if not args:
+        get = await medivallite.get_reply_message()
+        args = get.text   
+    if not args:
+        await medivallite.edit("`What I am Supposed to medival for U Dumb`")
+        return
+    string = ''.join(args).lower()
+    for normiecharacter in string:
+        if normiecharacter in normiefont:
+            medivalxxcharacter = medival2[normiefont.index(normiecharacter)]
+            string = string.replace(normiecharacter, medivalxxcharacter)
+    await medivallite.edit(string)
+    
+    
+    
+cursive = ['𝒶', '𝒷', '𝒸', '𝒹', '𝑒', '𝒻', '𝑔', '𝒽', '𝒾', '𝒿', '𝓀', '𝓁', '𝓂', '𝓃', '𝑜', '𝓅', '𝓆', '𝓇', '𝓈', '𝓉', '𝓊',
+           '𝓋', '𝓌', '𝓍', '𝓎', '𝓏']
+   
+@register(outgoing=True, pattern="^.cur(?: |$)(.*)")
+async def xcursive(cursivelite):
+
+    args = cursivelite.pattern_match.group(1)
+    if not args:
+        get = await cursivelite.get_reply_message()
+        args = get.text   
+    if not args:
+        await cursivelite.edit("`What I am Supposed to cursive for U Dumb`")
+        return
+    string = ''.join(args).lower()
+    for normiecharacter in string:
+        if normiecharacter in normiefont:
+            cursivecharacter = cursive[normiefont.index(normiecharacter)]
+            string = string.replace(normiecharacter, cursivecharacter)
+    await cursivelite.edit(string)
+            
+            
             
 CMD_HELP.update({
     "remixmisc":
-    ".app\
+    "`.app`\
 \nUsage: type .app name and get app details.\
-\n\n.undlt\
+\n\n`.undlt`\
 \nUsage: undo deleted message but u need admin permission.\
-\n\n.calc\
+\n\n`.calc`\
 \nUsage:.calc <term1><operator><term2>\nFor eg .calc 02*02 or 99*99 (the zeros are important) (two terms and two digits max).\
-\n\n.remove\
+\n\n`.remove`\
 \nUsage:.remove d or y or m or w or o or q or r.\n(d=deletedaccount y=userstatsempty m=userstatsmonth w=userstatsweek o=userstatsoffline q=userstatsonline r=userstatsrecently).\
-\n\n.xcd\
+\n\n`.xcd`\
 \nUsage: type xcd <query>.ps:i have no damm idea how it works 🤷\
-\n\n.grab <count>\
+\n\n`.grab` <count>\
 \nUsage:replay .grab or .grab <count> to grab profile picture.\
-\n\n.watermark\
-\nusage: still fixing 😔\
-\n\n.clone @username\
-\nusage: clone you whole freking account except username so stay safe\
-\n\n.res\
-\nusage: type account,channel,group or bot username and reply with .res and check restriction\
-\n\n\n PS: I will add more xD" 
+\n\n`.rnupload` filename.extenstion\
+\nUsage:reply to a sticker and type .rnupload xyz.jpg\
+\n\n`.clone` @username\
+\nUsage: clone you whole freking account except username so stay safe\
+\n\n`.res`\
+\nUsage: type account,channel,group or bot username and reply with .res and check restriction\
+\n\n`.watch` <movie/tv> show\
+\nUsage:know details about particular movie/show.\
+\n\n`.weeb` <text>\
+\nUsage:weebify a text\
+\n\nIt contains (`.bold <text>`,`.cur <text>`,`.curbold <text>`,`.medi <text>`,`.medibold <text>`,`.doublestruck <text>`)\
+\nUsage:makes your text <bold,cursive,cursivebold,medival,medivalbold,gayishbold>"
 })

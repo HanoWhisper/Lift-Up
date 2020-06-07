@@ -90,29 +90,6 @@ async def _(event):
              await event.delete()
              await bot.forward_messages(event.chat_id, response.message)
                 
-                
-                
-@register(outgoing=True, pattern="^.spec(?: |$)(.*)")
-async def _(event):
-    if event.fwd_from:
-        return
-    link = event.pattern_match.group(1)
-    chat = "@XiaomiGeeksBot"
-    spec = f"specs"
-    await event.edit("```Processing```")
-    async with bot.conversation("@XiaomiGeeksBot") as conv:
-          try:
-              response = conv.wait_event(events.NewMessage(incoming=True,from_users=774181428))
-              await conv.send_message(f'/{spec} {link}')
-              response = await response
-          except YouBlockedUserError:
-              await event.reply("```Unblock @XiaomiGeeksBot plox```")
-              return
-          else:
-             await event.delete()
-             await bot.forward_messages(event.chat_id, response.message)
-                
-                
 @register(outgoing=True, pattern="^.pb(?: |$)(.*)")
 async def _(event):
     if event.fwd_from:
@@ -132,7 +109,6 @@ async def _(event):
           else:
              await event.delete()
              await bot.forward_messages(event.chat_id, response.message)
-                
                 
 @register(outgoing=True, pattern="^.of(?: |$)(.*)")
 async def _(event):
@@ -157,15 +133,15 @@ async def _(event):
 CMD_HELP.update({
 "xiaomi":
 "For Xiaomeme devices only!\
-\n\n.firmware (codename)\
+\n\n`.firmware` (codename)\
      \nUsage : Get lastest Firmware\
-\n\n.pb (codename)\
+\n\n`.pb` (codename)\
      \nUsage : Get latest PBRP\
-\n\n.spec (codename)\
+\n\n`.spec` (codename)\
      \nUsage : Get quick spec information about device\
-\n\n.fastboot (codename)\
+\n\n`.fastboot` (codename)\
      \nUsage : Get latest fastboot MIUI\
-\n\n.recovery (codename)\
+\n\n`.recovery` (codename)\
      \nUsage : Get latest recovery MIUI\
-\n\n.of (codename)\
+\n\n`.of` (codename)\
      \nUsage : Get latest ORangeFox Recovery"})
