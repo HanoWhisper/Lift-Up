@@ -270,7 +270,7 @@ async def fetch_info(replied_user, event):
     first_name = replied_user.user.first_name
     last_name = replied_user.user.last_name
     try:
-        dc_id, location = get_input_location(replied_user.profile_photo)
+        dc_id, _ = get_input_location(replied_user.profile_photo)
     except Exception as e:
         dc_id = "Couldn't fetch DC ID!"
         location = str(e)
@@ -304,7 +304,7 @@ async def fetch_info(replied_user, event):
     caption += f"ID: <code>{user_id}</code>\n\n"
     caption += f"Bio: \n<code>{user_bio}</code>\n\n"
     caption += f"Common Chats with this user: {common_chat}\n"
-    caption += f"Permanent Link To Profile: "
+    caption += "Permanent Link To Profile: "
     caption += f"<a href=\"tg://user?id={user_id}\">{first_name}</a>"
 
     return photo, caption
@@ -326,7 +326,5 @@ CMD_HELP.update({
 \n\n`.count`\
 \nUsage: Counts your groups, chats, bots etc...\
 \n\n`.data` <username> or reply to someones text with `.data`\
-\nUsage: Gets info of an user\
-\n\n`randpp`\
-\nusage: selects random profile pic and changes. It will automatically after 2 hours\n To stop this module just restart the bot."         
+\nUsage: Gets info of an user."
 })
